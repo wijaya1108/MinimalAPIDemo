@@ -1,3 +1,5 @@
+using MinimalAPIDemo.Data;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -14,9 +16,21 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.MapGet("/hello/{id:int}", (int id) =>
+app.MapGet("/api/coupons", () =>
 {
-    return Results.Ok($"Id is {id}");
+    var coupons = CouponStore.couponList;
+    return Results.Ok(coupons);
+});
+
+app.MapGet("/api/coupons/{id:int}", (int id) =>
+{
+    var coupon = CouponStore.couponList.FirstOrDefault(c => c.Id == id);
+
+    if (coupon != null)
+        return Results.Ok(coupon);
+
+    return Results.BadRequest("Coupon does not exist");
+
 });
 
 app.UseHttpsRedirection();
