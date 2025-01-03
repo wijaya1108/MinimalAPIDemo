@@ -1,4 +1,6 @@
+using Microsoft.AspNetCore.Mvc;
 using MinimalAPIDemo.Data;
+using MinimalAPIDemo.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,7 +22,8 @@ app.MapGet("/api/coupons", () =>
 {
     var coupons = CouponStore.couponList;
     return Results.Ok(coupons);
-});
+
+}).WithName("GetCoupons").Produces<IEnumerable<Coupon>>(200);
 
 app.MapGet("/api/coupons/{id:int}", (int id) =>
 {
@@ -31,7 +34,28 @@ app.MapGet("/api/coupons/{id:int}", (int id) =>
 
     return Results.BadRequest("Coupon does not exist");
 
-});
+}).WithName("GetCoupon").Produces<Coupon>(200).Produces(400);
+
+app.MapPost("/api/coupons", ([FromBody] Coupon coupon) =>
+{
+    if (coupon.Id != 0 || string.IsNullOrEmpty(coupon.Name))
+    {
+        return Results.BadRequest("Invalid Coupon");
+    }
+
+    if (CouponStore.couponList.FirstOrDefault(c => c.Name.ToLower() == coupon.Name.ToLower()) != null)
+    {
+        return Results.BadRequest("Coupon already exists");
+    }
+
+    var couponIds = CouponStore.couponList.Select(c => c.Id).ToList();
+    coupon.Id = couponIds.Last() + 1;
+    CouponStore.couponList.Add(coupon);
+
+
+    return Results.CreatedAtRoute("GetCoupon", new { id = coupon.Id }, coupon);
+
+}).WithName("CreateCoupon").Accepts<Coupon>("application/json").Produces<Coupon>(201).Produces(400);
 
 app.UseHttpsRedirection();
 
