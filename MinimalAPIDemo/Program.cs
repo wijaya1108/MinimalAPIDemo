@@ -1,9 +1,11 @@
 using AutoMapper;
+using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using MinimalAPIDemo.Data;
 using MinimalAPIDemo.Mappers;
 using MinimalAPIDemo.Models;
 using MinimalAPIDemo.Models.DTO;
+using System.Net;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,6 +17,9 @@ builder.Services.AddSwaggerGen();
 //register automapper
 builder.Services.AddAutoMapper(typeof(MapConfig));
 
+//register fluent validator
+builder.Services.AddValidatorsFromAssemblyContaining<Program>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -24,6 +29,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+
 app.MapGet("/api/coupons", (ILogger<Program> _logger, IMapper _mapper) =>
 {
     _logger.Log(LogLevel.Information, "Getting all coupons");
@@ -31,31 +37,60 @@ app.MapGet("/api/coupons", (ILogger<Program> _logger, IMapper _mapper) =>
 
     List<CouponCreateResponse> couponsResponse = _mapper.Map<List<CouponCreateResponse>>(coupons);
 
-    return Results.Ok(couponsResponse);
+    APIResponse response = new()
+    {
+        Success = true,
+        Result = couponsResponse,
+        StatusCode = HttpStatusCode.OK
+    };
 
-}).WithName("GetCoupons").Produces<IEnumerable<CouponCreateResponse>>(200);
+    return Results.Ok(response);
 
-app.MapGet("/api/coupons/{id:int}", (int id) =>
+}).WithName("GetCoupons").Produces<APIResponse>(200);
+
+
+app.MapGet("/api/coupons/{id:int}", (IMapper _mapper, int id) =>
 {
     var coupon = CouponStore.couponList.FirstOrDefault(c => c.Id == id);
 
+    CouponCreateResponse couponResponse = _mapper.Map<CouponCreateResponse>(coupon);
+
+    APIResponse response = new APIResponse();
+
     if (coupon != null)
-        return Results.Ok(coupon);
-
-    return Results.BadRequest("Coupon does not exist");
-
-}).WithName("GetCoupon").Produces<Coupon>(200).Produces(400);
-
-app.MapPost("/api/coupons", (IMapper _mapper, [FromBody] CouponCreateDTO request) =>
-{
-    if (string.IsNullOrEmpty(request.Name))
     {
-        return Results.BadRequest("Invalid Coupon");
+        response.Success = true;
+        response.Result = couponResponse;
+        response.StatusCode = HttpStatusCode.OK;
+
+        return Results.Ok(response);
+    }
+
+    response.ErrorMessages.Add("Cannot find the requested coupon");
+
+    return Results.BadRequest(response);
+
+}).WithName("GetCoupon").Produces<APIResponse>(200);
+
+
+app.MapPost("/api/coupons", async (IMapper _mapper, IValidator<CouponCreateDTO> _validator ,[FromBody] CouponCreateDTO request) =>
+{
+    APIResponse response = new APIResponse();
+
+    var validationResult = await _validator.ValidateAsync(request);
+
+    if (!validationResult.IsValid)
+    {
+        List<string> errorMessages = validationResult.Errors.Select(e => e.ErrorMessage).ToList();
+
+        response.ErrorMessages = errorMessages;
+        return Results.BadRequest(response);
     }
 
     if (CouponStore.couponList.FirstOrDefault(c => c.Name.ToLower() == request.Name.ToLower()) != null)
     {
-        return Results.BadRequest("Coupon already exists");
+        response.ErrorMessages.Add("Coupon already exists");
+        return Results.BadRequest(response);
     }
 
     Coupon coupon = _mapper.Map<Coupon>(request);
@@ -66,9 +101,14 @@ app.MapPost("/api/coupons", (IMapper _mapper, [FromBody] CouponCreateDTO request
 
     CouponCreateResponse couponResponse = _mapper.Map<CouponCreateResponse>(coupon);
 
-    return Results.CreatedAtRoute("GetCoupon", new { id = coupon.Id }, couponResponse);
+    response.Success = true;
+    response.StatusCode = HttpStatusCode.Created;
+    response.Result = couponResponse;
 
-}).WithName("CreateCoupon").Accepts<CouponCreateDTO>("application/json").Produces<CouponCreateResponse>(201).Produces(400);
+    return Results.Ok(response);
+    //return Results.CreatedAtRoute("GetCoupon", new { id = coupon.Id }, couponResponse);
+
+}).WithName("CreateCoupon").Accepts<CouponCreateDTO>("application/json").Produces<APIResponse>(201);
 
 app.UseHttpsRedirection();
 
