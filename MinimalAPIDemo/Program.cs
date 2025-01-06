@@ -73,7 +73,7 @@ app.MapGet("/api/coupons/{id:int}", (IMapper _mapper, int id) =>
 }).WithName("GetCoupon").Produces<APIResponse>(200);
 
 
-app.MapPost("/api/coupons", async (IMapper _mapper, IValidator<CouponCreateDTO> _validator ,[FromBody] CouponCreateDTO request) =>
+app.MapPost("/api/coupons", async (IMapper _mapper, IValidator<CouponCreateDTO> _validator, [FromBody] CouponCreateDTO request) =>
 {
     APIResponse response = new APIResponse();
 
@@ -109,6 +109,44 @@ app.MapPost("/api/coupons", async (IMapper _mapper, IValidator<CouponCreateDTO> 
     //return Results.CreatedAtRoute("GetCoupon", new { id = coupon.Id }, couponResponse);
 
 }).WithName("CreateCoupon").Accepts<CouponCreateDTO>("application/json").Produces<APIResponse>(201);
+
+
+//update endpoint
+app.MapPut("/api/coupons", async (IValidator<CouponUpdateRequest> _validator, IMapper _mapper, [FromBody] CouponUpdateRequest request) =>
+{
+    APIResponse response = new();
+
+    var validationResult = await _validator.ValidateAsync(request);
+
+    if (!validationResult.IsValid)
+    {
+        List<string> errorMessages = validationResult.Errors.Select(e => e.ErrorMessage).ToList();
+        response.ErrorMessages = errorMessages;
+        return Results.BadRequest(response);
+    }
+
+    var existingCoupon = CouponStore.couponList.FirstOrDefault(c => c.Id == request.Id);
+
+    if (existingCoupon == null)
+    {
+        response.ErrorMessages.Add("Requested coupon does not exist");
+        return Results.BadRequest(response);
+    }
+
+    existingCoupon.Name = request.Name;
+    existingCoupon.Percent = request.Percent;
+    existingCoupon.IsActive = request.IsActive;
+    existingCoupon.LastUpdated = DateTime.UtcNow;
+
+    var couponResponse = _mapper.Map<CouponCreateResponse>(existingCoupon);
+
+    response.Success = true;
+    response.StatusCode = HttpStatusCode.OK;
+    response.Result = couponResponse;
+
+    return Results.Ok(response);
+
+}).Accepts<CouponUpdateRequest>("application/json").Produces<APIResponse>(200);
 
 app.UseHttpsRedirection();
 
