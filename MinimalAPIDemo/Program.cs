@@ -148,6 +148,27 @@ app.MapPut("/api/coupons", async (IValidator<CouponUpdateRequest> _validator, IM
 
 }).Accepts<CouponUpdateRequest>("application/json").Produces<APIResponse>(200);
 
+//delete endpoint
+app.MapDelete("/api/coupons/{id:int}", (int id) =>
+{
+    APIResponse response = new APIResponse();
+
+    var coupon = CouponStore.couponList.FirstOrDefault(c => c.Id == id);
+
+    if (coupon != null)
+    {
+        CouponStore.couponList.Remove(coupon);
+        response.Success = true;
+        response.StatusCode = HttpStatusCode.OK;
+        return Results.Ok(response);
+    }
+
+    response.ErrorMessages.Add("Cannot find the requested coupon");
+
+    return Results.BadRequest(response);
+
+}).Produces<APIResponse>(200);
+
 app.UseHttpsRedirection();
 
 app.Run();
