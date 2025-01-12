@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using TodoMinimalAPI.Data;
 using TodoMinimalAPI.Models;
+using TodoMinimalAPI.Models.Requests;
 using TodoMinimalAPI.Repository.Interface;
 
 namespace TodoMinimalAPI.Repository.Services
@@ -16,11 +17,16 @@ namespace TodoMinimalAPI.Repository.Services
             _logger = logger;
         }
 
-        public async Task<bool> AddDepartment(Department department)
+        public async Task<bool> AddDepartment(DepartmentCreateRequest department)
         {
+            Department newDepartment = new();
+            newDepartment.Id = Guid.NewGuid();
+            newDepartment.DepartmentName = department.DepartmentName;
+
             try
             {
-                var result = await _dbContext.Departments.AddAsync(department);
+                var result = await _dbContext.Departments.AddAsync(newDepartment);
+                await _dbContext.SaveChangesAsync();
                 return true;
             }
             catch (Exception ex)
