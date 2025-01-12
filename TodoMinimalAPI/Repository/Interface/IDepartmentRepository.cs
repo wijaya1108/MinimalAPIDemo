@@ -1,4 +1,5 @@
 ﻿using TodoMinimalAPI.Models;
+using TodoMinimalAPI.Models.Requests;
 
 namespace TodoMinimalAPI.Repository.Interface
 {
@@ -6,7 +7,7 @@ namespace TodoMinimalAPI.Repository.Interface
     {
         Task<IEnumerable<Department>> GetDepartments();
         Task<Department> GetDepartmentById(Guid id);
-        Task<bool> AddDepartment(Department department);
+        Task<bool> AddDepartment(DepartmentCreateRequest department);
         Task<Department> UpdateDepartment(Department department);
         Task<bool> DeleteDepartment(Guid id);
     }
