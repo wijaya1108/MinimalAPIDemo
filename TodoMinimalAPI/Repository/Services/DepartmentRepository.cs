@@ -41,9 +41,25 @@ namespace TodoMinimalAPI.Repository.Services
             throw new NotImplementedException();
         }
 
-        public Task<Department> GetDepartmentById(Guid id)
+        public async Task<Department?> GetDepartmentById(Guid id)
         {
-            throw new NotImplementedException();
+            try
+            {
+                var department = await _dbContext.Departments.FindAsync(id);
+
+                if (department == null)
+                {
+                    _logger.LogError($"Could not find the department with an ID of {id}");
+                    return null;
+                }
+
+                return department;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error occured while retrieving the department which has id of {id}");
+                throw;
+            }
         }
 
         public async Task<IEnumerable<Department>> GetDepartments()

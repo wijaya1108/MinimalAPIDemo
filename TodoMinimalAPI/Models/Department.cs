@@ -1,5 +1,8 @@
-﻿namespace TodoMinimalAPI.Models
+﻿using System.Diagnostics;
+
+namespace TodoMinimalAPI.Models
 {
+    [DebuggerDisplay("{DepartmentName}")]
     public class Department
     {
         public Guid Id { get; set; }
