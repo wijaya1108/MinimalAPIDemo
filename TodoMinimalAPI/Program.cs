@@ -68,6 +68,22 @@ app.MapGet("api/departments/{id:guid}", async (IDepartmentRepository _department
     return Results.NotFound($"Department with the requested id {id} does not exist!");
 }).Produces<Department>(200).Produces(404);
 
+app.MapPut("api/departments", async (IValidator<DepartmentUpdateRequest> _validator, IDepartmentRepository _departmentRepository, DepartmentUpdateRequest request) =>
+{
+    var validationResult = await _validator.ValidateAsync(request);
+
+    if (!validationResult.IsValid)
+    {
+        var errorMessages = validationResult.Errors.Select(e => e.ErrorMessage).ToList();
+        return Results.BadRequest(errorMessages);
+    }
+
+    var result = await _departmentRepository.UpdateDepartment(request);
+
+    return Results.Ok(result);
+
+}).Accepts<DepartmentUpdateRequest>("application/json");
+
 app.UseHttpsRedirection();
 
 app.Run();
