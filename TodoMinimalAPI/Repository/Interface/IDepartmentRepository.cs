@@ -8,7 +8,7 @@ namespace TodoMinimalAPI.Repository.Interface
         Task<IEnumerable<Department>> GetDepartments();
         Task<Department> GetDepartmentById(Guid id);
         Task<bool> AddDepartment(DepartmentCreateRequest department);
-        Task<Department> UpdateDepartment(Department department);
+        Task<Department> UpdateDepartment(DepartmentUpdateRequest department);
         Task<bool> DeleteDepartment(Guid id);
     }
 }

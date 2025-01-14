@@ -69,9 +69,32 @@ namespace TodoMinimalAPI.Repository.Services
             return departments;
         }
 
-        public Task<Department> UpdateDepartment(Department department)
+        public async Task<Department> UpdateDepartment(DepartmentUpdateRequest department)
         {
-            throw new NotImplementedException();
+            var newDepartment = new Department
+            {
+                Id = department.Id,
+                DepartmentName = department.DepartmentName
+            };
+
+            try
+            {
+                var existingDepartment = await _dbContext.Departments.FirstOrDefaultAsync(d => d.Id == newDepartment.Id);
+
+                if (existingDepartment != null)
+                {
+                    existingDepartment.DepartmentName = newDepartment.DepartmentName;
+                    await _dbContext.SaveChangesAsync();
+                    return existingDepartment;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Something went wrong while updating the department with id = {newDepartment.Id}");
+                throw;
+            }
+
+            return null;
         }
     }
 }
