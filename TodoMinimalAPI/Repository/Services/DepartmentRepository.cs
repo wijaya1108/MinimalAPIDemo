@@ -36,9 +36,27 @@ namespace TodoMinimalAPI.Repository.Services
             }
         }
 
-        public Task<bool> DeleteDepartment(Guid id)
+        public async Task<bool> DeleteDepartment(Guid id)
         {
-            throw new NotImplementedException();
+            try
+            {
+                var department = await _dbContext.Departments.FirstOrDefaultAsync(d => d.Id == id);
+
+                if (department != null)
+                {
+                    _dbContext.Departments.Remove(department);
+                    await _dbContext.SaveChangesAsync();
+                    return true;
+                }
+
+                return false;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Something went wrong while deleting the department with id {id}");
+                throw;
+            }
+
         }
 
         public async Task<Department?> GetDepartmentById(Guid id)
