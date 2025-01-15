@@ -84,6 +84,13 @@ app.MapPut("api/departments", async (IValidator<DepartmentUpdateRequest> _valida
 
 }).Accepts<DepartmentUpdateRequest>("application/json");
 
+app.MapDelete("api/departments/{id:guid}", async (IDepartmentRepository _departmentRepository, Guid id) =>
+{
+    var result = await _departmentRepository.DeleteDepartment(id);
+
+    return Results.Ok(result);
+});
+
 app.UseHttpsRedirection();
 
 app.Run();
