@@ -82,7 +82,7 @@ namespace TodoMinimalAPI.Repository.Services
 
         public async Task<IEnumerable<Department>> GetDepartments()
         {
-            var departments = await _dbContext.Departments.ToListAsync();
+            var departments = await _dbContext.Departments.AsNoTracking().ToListAsync();
             _logger.LogInformation("department retrievel successfull");
             return departments;
         }
