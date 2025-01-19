@@ -84,6 +84,7 @@ app.MapPut("api/departments", async (IValidator<DepartmentUpdateRequest> _valida
 
 }).Accepts<DepartmentUpdateRequest>("application/json");
 
+//comment to check github action
 app.MapDelete("api/departments/{id:guid}", async (IDepartmentRepository _departmentRepository, Guid id) =>
 {
     var result = await _departmentRepository.DeleteDepartment(id);
