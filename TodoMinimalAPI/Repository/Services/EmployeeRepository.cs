@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using TodoMinimalAPI.Data;
 using TodoMinimalAPI.Models;
+using TodoMinimalAPI.Models.Requests;
 using TodoMinimalAPI.Repository.Interface;
 
 namespace TodoMinimalAPI.Repository.Services
@@ -22,11 +23,23 @@ namespace TodoMinimalAPI.Repository.Services
             return employees;
         }
 
-        public async Task<bool> AddEmployee(Employee employee)
+        public async Task<bool> AddEmployee(EmployeeCreateRequest employee)
         {
+            Employee newEmp = new Employee();
+
+            newEmp.Id = Guid.NewGuid();
+            newEmp.FirstName = employee.FirstName;
+            newEmp.LastName = employee.LastName;
+            newEmp.Email = employee.Email;
+            newEmp.DateOfBirth = employee.DateOfBirth;
+
+            var department = await _context.Departments.FindAsync(employee.DepartmentId);
+
+            newEmp.DepartmentId = department.Id;
+
             try
             {
-                var result = await _context.Employees.AddAsync(employee);
+                var result = await _context.Employees.AddAsync(newEmp);
                 await _context.SaveChangesAsync();
                 return true;
             }
