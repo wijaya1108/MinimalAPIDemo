@@ -1,4 +1,5 @@
 ﻿using TodoMinimalAPI.Models;
+using TodoMinimalAPI.Models.Requests;
 
 namespace TodoMinimalAPI.Repository.Interface
 {
@@ -6,7 +7,7 @@ namespace TodoMinimalAPI.Repository.Interface
     {
         Task<IEnumerable<Employee>> GetEmployees();
         Task<Employee> GetEmployee(Guid id);
-        Task<bool> AddEmployee(Employee employee);
+        Task<bool> AddEmployee(EmployeeCreateRequest employee);
         Task<Employee> UpdateEmployee(Employee employee);
         Task<bool> DeleteEmployee(Guid id);
     }
