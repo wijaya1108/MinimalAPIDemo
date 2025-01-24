@@ -13,25 +13,38 @@ namespace TodoMinimalAPI.Endpoints
         {
             app.MapPost("api/employee", async (IEmployeeRepository _empRepository,
                 IValidator<EmployeeCreateRequest> _validator,
-                [FromBody] EmployeeCreateRequest request) =>
+                [FromBody] EmployeeCreateRequest request,
+                APIResponse _apiResponse) =>
             {
-                APIResponse response = new APIResponse();
                 var validationResult = await _validator.ValidateAsync(request);
 
                 if (!validationResult.IsValid)
                 {
                     var errorMessages = validationResult.Errors.Select(e => e.ErrorMessage).ToList();
 
-                    response.Success = false;
-                    response.Errors = errorMessages;
-                    response.StatusCode = HttpStatusCode.BadRequest;
+                    _apiResponse.Success = false;
+                    _apiResponse.Errors = errorMessages;
+                    _apiResponse.StatusCode = HttpStatusCode.BadRequest;
 
-                    return Results.BadRequest(response);
+                    return Results.BadRequest(_apiResponse);
                 }
 
                 var result = await _empRepository.AddEmployee(request);
 
-                return Results.Ok(response);
+                _apiResponse.Result = result;
+
+                return Results.Ok(_apiResponse);
+
+            }).Produces<APIResponse>(201);
+
+            app.MapGet("api/employees", async (IEmployeeRepository _empRepository,
+                APIResponse _apiResponse) =>
+            {
+
+                var result = await _empRepository.GetEmployees();
+                _apiResponse.Result = result;
+                return Results.Ok(_apiResponse);
+
             }).Produces<APIResponse>(200);
         }
     }

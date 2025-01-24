@@ -5,6 +5,7 @@ using TodoMinimalAPI.Data;
 using TodoMinimalAPI.Endpoints;
 using TodoMinimalAPI.Models;
 using TodoMinimalAPI.Models.Requests;
+using TodoMinimalAPI.Models.Responses;
 using TodoMinimalAPI.Repository.Interface;
 using TodoMinimalAPI.Repository.Services;
 
@@ -18,6 +19,7 @@ builder.Services.AddSwaggerGen();
 //register DI services
 builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
 builder.Services.AddScoped<IDepartmentRepository, DepartmentRepository>();
+builder.Services.AddScoped<APIResponse>();
 
 //register db context as a service
 builder.Services.AddDbContext<AppDbContext>(options =>
