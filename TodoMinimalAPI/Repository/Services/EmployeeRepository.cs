@@ -70,9 +70,32 @@ namespace TodoMinimalAPI.Repository.Services
             throw new NotImplementedException();
         }
 
-        Task<Employee> IEmployeeRepository.GetEmployee(Guid id)
+        public async Task<Employee> GetEmployee(Guid id)
         {
-            throw new NotImplementedException();
+            try
+            {
+                var employee = await _context.Employees.FindAsync(id);
+                if (employee != null)
+                {
+                    return employee;
+                }
+                else
+                {
+                    _apiResponse.Errors?.Add($"Could not find the employee with id of {id}");
+                    _apiResponse.Success = false;
+                    _apiResponse.StatusCode = HttpStatusCode.NotFound;
+                    return employee;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred");
+                _apiResponse.Success = false;
+                _apiResponse.Errors.Add($"error occurred: {ex}");
+                _apiResponse.StatusCode = HttpStatusCode.BadRequest;
+                return null;
+            }
+
         }
 
         Task<Employee> IEmployeeRepository.UpdateEmployee(Employee employee)
