@@ -37,6 +37,7 @@ namespace TodoMinimalAPI.Endpoints
 
             }).Produces<APIResponse>(201);
 
+
             app.MapGet("api/employees", async (IEmployeeRepository _empRepository,
                 APIResponse _apiResponse) =>
             {
@@ -46,6 +47,17 @@ namespace TodoMinimalAPI.Endpoints
                 return Results.Ok(_apiResponse);
 
             }).Produces<APIResponse>(200);
+
+
+            app.MapGet("api/employees/{id:guid}", async (IEmployeeRepository _empRepository,
+                APIResponse _apiResponse,
+                Guid id) =>
+            {
+                var result = await _empRepository.GetEmployee(id);
+                _apiResponse.Result = result;
+
+                return Results.Ok(_apiResponse);
+            });
         }
     }
 }
