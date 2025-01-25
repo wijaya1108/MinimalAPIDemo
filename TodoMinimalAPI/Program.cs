@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TodoMinimalAPI.Data;
 using TodoMinimalAPI.Endpoints;
+using TodoMinimalAPI.Middleware;
 using TodoMinimalAPI.Models;
 using TodoMinimalAPI.Models.Requests;
 using TodoMinimalAPI.Models.Responses;
@@ -19,7 +20,6 @@ builder.Services.AddSwaggerGen();
 //register DI services
 builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
 builder.Services.AddScoped<IDepartmentRepository, DepartmentRepository>();
-builder.Services.AddScoped<APIResponse>();
 
 //register db context as a service
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -38,6 +38,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+//add exception handling middleware
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 //adding endpoints using extension method
 app.AddDepartmentEndpoints();

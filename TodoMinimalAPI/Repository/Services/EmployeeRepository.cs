@@ -12,30 +12,35 @@ namespace TodoMinimalAPI.Repository.Services
     {
         private readonly AppDbContext _context;
         private readonly ILogger<EmployeeRepository> _logger;
-        private readonly APIResponse _apiResponse;
 
-        public EmployeeRepository(AppDbContext context, ILogger<EmployeeRepository> logger, APIResponse apiResponse)
+        public EmployeeRepository(AppDbContext context, ILogger<EmployeeRepository> logger)
         {
             _context = context;
             _logger = logger;
-            _apiResponse = apiResponse;
         }
 
-        public async Task<IEnumerable<Employee>> GetEmployees()
+        public async Task<IEnumerable<EmployeeResponse>> GetEmployees()
         {
-            try
-            {
-                var employees = await _context.Employees.ToListAsync();
-                return employees;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Something went wrong while retrieving all employees");
-                _apiResponse.Success = false;
-                _apiResponse.StatusCode = HttpStatusCode.BadRequest;
-                return null;
-            }
+            var employees = await _context.Employees
+                .Join(
+                _context.Departments,
+                e => e.DepartmentId,
+                d => d.Id,
+                (e, d) => new EmployeeResponse
+                {
+                    Id = e.Id,
+                    FirstName = e.FirstName,
+                    LastName = e.LastName,
+                    DateOfBirth = e.DateOfBirth,
+                    Email = e.Email,
+                    Department = new Department
+                    {
+                        Id = d.Id,
+                        DepartmentName = d.DepartmentName
+                    }
+                }).ToListAsync();
 
+            return employees;
         }
 
         public async Task<bool> AddEmployee(EmployeeCreateRequest employee)
@@ -48,21 +53,13 @@ namespace TodoMinimalAPI.Repository.Services
             newEmp.Email = employee.Email;
             newEmp.DateOfBirth = employee.DateOfBirth;
 
-            try
-            {
-                var department = await _context.Departments.FindAsync(employee.DepartmentId);
-                newEmp.DepartmentId = department.Id;
-                var result = await _context.Employees.AddAsync(newEmp);
-                await _context.SaveChangesAsync();
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Cannot insert the record");
-                _apiResponse.Success = false;
-                _apiResponse.StatusCode = HttpStatusCode.BadRequest;
-                return false;
-            }
+            var department = await _context.Departments.FindAsync(employee.DepartmentId);
+            newEmp.DepartmentId = department.Id;
+
+            var result = await _context.Employees.AddAsync(newEmp);
+            await _context.SaveChangesAsync();
+
+            return true;
         }
 
         Task<bool> IEmployeeRepository.DeleteEmployee(Guid id)
@@ -72,30 +69,14 @@ namespace TodoMinimalAPI.Repository.Services
 
         public async Task<Employee> GetEmployee(Guid id)
         {
-            try
-            {
-                var employee = await _context.Employees.FindAsync(id);
-                if (employee != null)
-                {
-                    return employee;
-                }
-                else
-                {
-                    _apiResponse.Errors?.Add($"Could not find the employee with id of {id}");
-                    _apiResponse.Success = false;
-                    _apiResponse.StatusCode = HttpStatusCode.NotFound;
-                    return employee;
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error occurred");
-                _apiResponse.Success = false;
-                _apiResponse.Errors.Add($"error occurred: {ex}");
-                _apiResponse.StatusCode = HttpStatusCode.BadRequest;
-                return null;
-            }
+            var employee = await _context.Employees.FindAsync(id);
 
+            if (employee != null)
+            {
+                return employee;
+            }
+            else
+                return null;
         }
 
         Task<Employee> IEmployeeRepository.UpdateEmployee(Employee employee)
