@@ -1,6 +1,7 @@
 ﻿using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
+using TodoMinimalAPI.Models;
 using TodoMinimalAPI.Models.Requests;
 using TodoMinimalAPI.Models.Responses;
 using TodoMinimalAPI.Repository.Interface;
@@ -13,8 +14,7 @@ namespace TodoMinimalAPI.Endpoints
         {
             app.MapPost("api/employee", async (IEmployeeRepository _empRepository,
                 IValidator<EmployeeCreateRequest> _validator,
-                [FromBody] EmployeeCreateRequest request,
-                APIResponse _apiResponse) =>
+                [FromBody] EmployeeCreateRequest request) =>
             {
                 var validationResult = await _validator.ValidateAsync(request);
 
@@ -22,41 +22,34 @@ namespace TodoMinimalAPI.Endpoints
                 {
                     var errorMessages = validationResult.Errors.Select(e => e.ErrorMessage).ToList();
 
-                    _apiResponse.Success = false;
-                    _apiResponse.Errors = errorMessages;
-                    _apiResponse.StatusCode = HttpStatusCode.BadRequest;
-
-                    return Results.BadRequest(_apiResponse);
+                    return Results.BadRequest(new
+                    {
+                        Errors = errorMessages
+                    });
                 }
 
                 var result = await _empRepository.AddEmployee(request);
 
-                _apiResponse.Result = result;
+                return Results.Ok(result);
 
-                return Results.Ok(_apiResponse);
-
-            }).Produces<APIResponse>(201);
+            });
 
 
-            app.MapGet("api/employees", async (IEmployeeRepository _empRepository,
-                APIResponse _apiResponse) =>
+            app.MapGet("api/employees", async (IEmployeeRepository _empRepository) =>
             {
-
                 var result = await _empRepository.GetEmployees();
-                _apiResponse.Result = result;
-                return Results.Ok(_apiResponse);
 
-            }).Produces<APIResponse>(200);
+                return Results.Ok(result);
+
+            }).Produces<IEnumerable<EmployeeResponse>>(200);
 
 
             app.MapGet("api/employees/{id:guid}", async (IEmployeeRepository _empRepository,
-                APIResponse _apiResponse,
                 Guid id) =>
             {
                 var result = await _empRepository.GetEmployee(id);
-                _apiResponse.Result = result;
 
-                return Results.Ok(_apiResponse);
+                return Results.Ok(result);
             });
         }
     }
