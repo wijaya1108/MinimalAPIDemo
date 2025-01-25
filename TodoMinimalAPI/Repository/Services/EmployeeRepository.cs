@@ -12,13 +12,11 @@ namespace TodoMinimalAPI.Repository.Services
     {
         private readonly AppDbContext _context;
         private readonly ILogger<EmployeeRepository> _logger;
-        private readonly IDepartmentRepository _departmentRepository;
 
-        public EmployeeRepository(AppDbContext context, ILogger<EmployeeRepository> logger, IDepartmentRepository departmentRepository)
+        public EmployeeRepository(AppDbContext context, ILogger<EmployeeRepository> logger)
         {
             _context = context;
             _logger = logger;
-            _departmentRepository = departmentRepository;
         }
 
         public async Task<IEnumerable<EmployeeResponse>> GetEmployees()
