@@ -22,8 +22,9 @@ namespace TodoMinimalAPI.Repository.Services
         public async Task<IEnumerable<EmployeeResponse>> GetEmployees()
         {
             var employees = await _context.Employees
+                .AsNoTracking()
                 .Join(
-                _context.Departments,
+                _context.Departments.AsNoTracking(),
                 e => e.DepartmentId,
                 d => d.Id,
                 (e, d) => new EmployeeResponse
@@ -67,16 +68,29 @@ namespace TodoMinimalAPI.Repository.Services
             throw new NotImplementedException();
         }
 
-        public async Task<Employee> GetEmployee(Guid id)
+        public async Task<EmployeeResponse> GetEmployee(Guid id)
         {
-            var employee = await _context.Employees.FindAsync(id);
+            var employee = await _context.Employees
+                .AsNoTracking()
+                .Where(e => e.Id == id)
+                .Join(_context.Departments.AsNoTracking(),
+                e => e.DepartmentId,
+                d => d.Id,
+                (e, d) => new EmployeeResponse
+                {
+                    Id = e.Id,
+                    FirstName = e.FirstName,
+                    LastName = e.LastName,
+                    DateOfBirth = e.DateOfBirth,
+                    Email = e.Email,
+                    Department = new Department
+                    {
+                        Id = d.Id,
+                        DepartmentName = d.DepartmentName
+                    }
+                }).FirstOrDefaultAsync();
 
-            if (employee != null)
-            {
-                return employee;
-            }
-            else
-                return null;
+            return employee;
         }
 
         Task<Employee> IEmployeeRepository.UpdateEmployee(Employee employee)
