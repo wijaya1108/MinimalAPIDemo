@@ -13,6 +13,7 @@ namespace TodoMinimalAPI.Endpoints
             app.MapGet("api/departments", async (IDepartmentRepository _departmentRepository) =>
             {
                 var departmentsList = await _departmentRepository.GetDepartments();
+
                 return Results.Ok(departmentsList);
 
             }).Produces<IEnumerable<Department>>(200);
@@ -28,7 +29,15 @@ namespace TodoMinimalAPI.Endpoints
                 }
 
                 var result = await _departmentRepository.AddDepartment(request);
-                return Results.Ok(result);
+
+                if (result)
+                    return Results.Ok(result);
+
+                return Results.BadRequest(new
+                {
+                    Success = false,
+                    Error = "Department already exists"
+                });
 
             }).Accepts<DepartmentCreateRequest>("application/json").Produces<bool>(200);
 
