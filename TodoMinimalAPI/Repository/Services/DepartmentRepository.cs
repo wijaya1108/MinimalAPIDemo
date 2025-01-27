@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using TodoMinimalAPI.Data;
 using TodoMinimalAPI.Models;
 using TodoMinimalAPI.Models.Requests;
@@ -19,21 +20,22 @@ namespace TodoMinimalAPI.Repository.Services
 
         public async Task<bool> AddDepartment(DepartmentCreateRequest department)
         {
+            var existingDepartments = await GetDepartments();
+
+            var existingDepartment = existingDepartments.FirstOrDefault(d => d.DepartmentName == department.DepartmentName);
+
+            if (existingDepartment != null)
+            {
+                return false;
+            }
+
             Department newDepartment = new();
             newDepartment.Id = Guid.NewGuid();
             newDepartment.DepartmentName = department.DepartmentName;
 
-            try
-            {
-                var result = await _dbContext.Departments.AddAsync(newDepartment);
-                await _dbContext.SaveChangesAsync();
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Cannot insert the department");
-                return false;
-            }
+            var result = await _dbContext.Departments.AddAsync(newDepartment);
+            await _dbContext.SaveChangesAsync();
+            return true;
         }
 
         public async Task<bool> DeleteDepartment(Guid id)
@@ -82,8 +84,8 @@ namespace TodoMinimalAPI.Repository.Services
 
         public async Task<IEnumerable<Department>> GetDepartments()
         {
-            var departments = await _dbContext.Departments.ToListAsync();
-            _logger.LogInformation("department retrievel successfull");
+            var departments = await _dbContext.Departments.AsNoTracking().ToListAsync();
+
             return departments;
         }
 
