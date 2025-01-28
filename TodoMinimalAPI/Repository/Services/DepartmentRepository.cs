@@ -40,46 +40,23 @@ namespace TodoMinimalAPI.Repository.Services
 
         public async Task<bool> DeleteDepartment(Guid id)
         {
-            try
-            {
-                var department = await _dbContext.Departments.FirstOrDefaultAsync(d => d.Id == id);
+            var department = await _dbContext.Departments.FirstOrDefaultAsync(d => d.Id == id);
 
-                if (department != null)
-                {
-                    _dbContext.Departments.Remove(department);
-                    await _dbContext.SaveChangesAsync();
-                    return true;
-                }
-
-                return false;
-            }
-            catch (Exception ex)
+            if (department != null)
             {
-                _logger.LogError(ex, $"Something went wrong while deleting the department with id {id}");
-                throw;
+                _dbContext.Departments.Remove(department);
+                await _dbContext.SaveChangesAsync();
+                return true;
             }
 
+            return false;
         }
 
         public async Task<Department?> GetDepartmentById(Guid id)
         {
-            try
-            {
-                var department = await _dbContext.Departments.FindAsync(id);
+            var department = await _dbContext.Departments.FindAsync(id);
 
-                if (department == null)
-                {
-                    _logger.LogError($"Could not find the department with an ID of {id}");
-                    return null;
-                }
-
-                return department;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Error occured while retrieving the department which has id of {id}");
-                throw;
-            }
+            return department;
         }
 
         public async Task<IEnumerable<Department>> GetDepartments()
@@ -91,27 +68,19 @@ namespace TodoMinimalAPI.Repository.Services
 
         public async Task<Department> UpdateDepartment(DepartmentUpdateRequest department)
         {
-            var newDepartment = new Department
-            {
-                Id = department.Id,
-                DepartmentName = department.DepartmentName
-            };
 
-            try
-            {
-                var existingDepartment = await _dbContext.Departments.FirstOrDefaultAsync(d => d.Id == newDepartment.Id);
+            var existingDepartment = await _dbContext.Departments.FirstOrDefaultAsync(d => d.Id == department.Id);
 
-                if (existingDepartment != null)
+            if (existingDepartment != null)
+            {
+                var newDepartment = new Department
                 {
-                    existingDepartment.DepartmentName = newDepartment.DepartmentName;
-                    await _dbContext.SaveChangesAsync();
-                    return existingDepartment;
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Something went wrong while updating the department with id = {newDepartment.Id}");
-                throw;
+                    Id = department.Id,
+                    DepartmentName = department.DepartmentName
+                };
+                existingDepartment.DepartmentName = newDepartment.DepartmentName;
+                await _dbContext.SaveChangesAsync();
+                return existingDepartment;
             }
 
             return null;

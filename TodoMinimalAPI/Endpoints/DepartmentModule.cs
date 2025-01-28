@@ -10,10 +10,11 @@ namespace TodoMinimalAPI.Endpoints
     {
         public static void AddDepartmentEndpoints(this IEndpointRouteBuilder app)
         {
-            app.MapGet("api/departments", async (IDepartmentRepository _departmentRepository) =>
+            app.MapGet("api/departments", async (IDepartmentRepository _departmentRepository, ILogger<Program> _logger) =>
             {
                 var departmentsList = await _departmentRepository.GetDepartments();
 
+                _logger.LogInformation("Retrieved {DepartmentCount} departments successfully", departmentsList.Count());
                 return Results.Ok(departmentsList);
 
             }).Produces<IEnumerable<Department>>(200);
@@ -49,6 +50,7 @@ namespace TodoMinimalAPI.Endpoints
                     return Results.Ok(result);
 
                 return Results.NotFound($"Department with the requested id {id} does not exist!");
+
             }).Produces<Department>(200).Produces(404);
 
             app.MapPut("api/departments", async (IValidator<DepartmentUpdateRequest> _validator, IDepartmentRepository _departmentRepository, DepartmentUpdateRequest request) =>
