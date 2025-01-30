@@ -21,25 +21,42 @@ namespace TodoMinimalAPI.Repository.Services
 
         public async Task<IEnumerable<EmployeeResponse>> GetEmployees()
         {
+            //var employees = await _context.Employees
+            //    .AsNoTracking()
+            //    .Join(
+            //    _context.Departments.AsNoTracking(),
+            //    e => e.DepartmentId,
+            //    d => d.Id,
+            //    (e, d) => new EmployeeResponse
+            //    {
+            //        Id = e.Id,
+            //        FirstName = e.FirstName,
+            //        LastName = e.LastName,
+            //        DateOfBirth = e.DateOfBirth,
+            //        Email = e.Email,
+            //        Department = new Department
+            //        {
+            //            Id = d.Id,
+            //            DepartmentName = d.DepartmentName
+            //        }
+            //    }).ToListAsync();
+
+            //using lazy loading
             var employees = await _context.Employees
-                .AsNoTracking()
-                .Join(
-                _context.Departments.AsNoTracking(),
-                e => e.DepartmentId,
-                d => d.Id,
-                (e, d) => new EmployeeResponse
+                .Select(e => new EmployeeResponse
                 {
                     Id = e.Id,
                     FirstName = e.FirstName,
                     LastName = e.LastName,
                     DateOfBirth = e.DateOfBirth,
                     Email = e.Email,
-                    Department = new Department
-                    {
-                        Id = d.Id,
-                        DepartmentName = d.DepartmentName
-                    }
+                    DepartmentId = e.DepartmentId
                 }).ToListAsync();
+
+            foreach (var employee in employees)
+            {
+                employee.Department = await _context.Departments.FirstOrDefaultAsync(d => d.Id == employee.DepartmentId);
+            }
 
             return employees;
         }
