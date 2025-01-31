@@ -11,52 +11,62 @@ namespace TodoMinimalAPI.Repository.Services
     public class EmployeeRepository : IEmployeeRepository
     {
         private readonly AppDbContext _context;
-        private readonly ILogger<EmployeeRepository> _logger;
 
-        public EmployeeRepository(AppDbContext context, ILogger<EmployeeRepository> logger)
+        public EmployeeRepository(AppDbContext context)
         {
             _context = context;
-            _logger = logger;
         }
 
         public async Task<IEnumerable<EmployeeResponse>> GetEmployees()
         {
-            //var employees = await _context.Employees
-            //    .AsNoTracking()
-            //    .Join(
-            //    _context.Departments.AsNoTracking(),
-            //    e => e.DepartmentId,
-            //    d => d.Id,
-            //    (e, d) => new EmployeeResponse
-            //    {
-            //        Id = e.Id,
-            //        FirstName = e.FirstName,
-            //        LastName = e.LastName,
-            //        DateOfBirth = e.DateOfBirth,
-            //        Email = e.Email,
-            //        Department = new Department
-            //        {
-            //            Id = d.Id,
-            //            DepartmentName = d.DepartmentName
-            //        }
-            //    }).ToListAsync();
-
-            //using lazy loading
             var employees = await _context.Employees
-                .Select(e => new EmployeeResponse
+                .AsNoTracking()
+                .Join(
+                _context.Departments.AsNoTracking(),
+                e => e.DepartmentId,
+                d => d.Id,
+                (e, d) => new EmployeeResponse
                 {
                     Id = e.Id,
                     FirstName = e.FirstName,
                     LastName = e.LastName,
                     DateOfBirth = e.DateOfBirth,
                     Email = e.Email,
-                    DepartmentId = e.DepartmentId
+                    Department = new Department
+                    {
+                        Id = d.Id,
+                        DepartmentName = d.DepartmentName
+                    }
                 }).ToListAsync();
 
-            foreach (var employee in employees)
-            {
-                employee.Department = await _context.Departments.FirstOrDefaultAsync(d => d.Id == employee.DepartmentId);
-            }
+            //using Eager Loading
+            //var employees = await _context.Employees.Include(e => e.Department)
+            //    .Select(e => new EmployeeResponse
+            //    {
+            //        Id = e.Id,
+            //        FirstName = e.FirstName,
+            //        LastName = e.LastName,
+            //        Email = e.Email,
+            //        DateOfBirth = e.DateOfBirth,
+            //        Department = e.Department
+            //    }).ToListAsync();
+
+            //using lazy loading
+            //var employees = await _context.Employees
+            //    .Select(e => new EmployeeResponse
+            //    {
+            //        Id = e.Id,
+            //        FirstName = e.FirstName,
+            //        LastName = e.LastName,
+            //        DateOfBirth = e.DateOfBirth,
+            //        Email = e.Email,
+            //        DepartmentId = e.DepartmentId
+            //    }).ToListAsync();
+
+            //foreach (var employee in employees)
+            //{
+            //    employee.Department = await _context.Departments.FirstOrDefaultAsync(d => d.Id == employee.DepartmentId);
+            //}
 
             return employees;
         }
@@ -106,6 +116,10 @@ namespace TodoMinimalAPI.Repository.Services
                         DepartmentName = d.DepartmentName
                     }
                 }).FirstOrDefaultAsync();
+
+            //var employee = await _context.Employees.FirstOrDefaultAsync(e => e.Id == id);
+
+            //await _context.Entry(employee).Reference(e => e.Department).LoadAsync();
 
             return employee;
         }
