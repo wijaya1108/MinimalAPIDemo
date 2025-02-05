@@ -27,10 +27,22 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DBConnection"));
 });
 
+//enable cors
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontEnd",
+        policy => policy.WithOrigins("http://127.0.0.1:5500")
+                        .AllowAnyMethod()
+                        .AllowAnyHeader());
+});
+
 //register fluent validation
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
 var app = builder.Build();
+
+//apply cors policy
+app.UseCors("AllowFrontEnd");
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
